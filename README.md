@@ -2,6 +2,8 @@
 
 A minimal terminal UI for Apache Airflow.
 
+![airdash main DAG view](docs/images/airdash-screenshot.png)
+
 On first launch, the app asks for:
 
 - Airflow URL, for example `https://airflow.example.com`
