@@ -13,6 +13,9 @@ from airflow_client.client.models.trigger_dag_run_post_body import TriggerDAGRun
 from airdash.config import AirflowConfig, normalize_airflow_url
 
 
+DEFAULT_RECENT_RUNS_LIMIT = 10
+
+
 @dataclass(frozen=True)
 class DagSummary:
     dag_id: str
@@ -57,7 +60,11 @@ class AirflowService:
         self._dags = DAGApi(api_client)
         self._dag_runs = DagRunApi(api_client)
 
-    def list_dags(self, limit: int = 100) -> list[DagSummary]:
+    def list_dags(
+        self,
+        limit: int = 100,
+        recent_runs_limit: int = DEFAULT_RECENT_RUNS_LIMIT,
+    ) -> list[DagSummary]:
         dags_response = self._dags.get_dags(
             limit=limit,
             order_by=["dag_id"],
@@ -66,7 +73,7 @@ class AirflowService:
 
         summaries: list[DagSummary] = []
         for dag in dags_response.dags:
-            recent_runs = self._latest_runs(dag.dag_id, limit=10)
+            recent_runs = self._latest_runs(dag.dag_id, limit=recent_runs_limit)
             last_run = recent_runs[0] if recent_runs else None
             summaries.append(
                 DagSummary(

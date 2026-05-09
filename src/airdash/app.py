@@ -8,7 +8,14 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.css.query import NoMatches
 from textual.widgets import Button, DataTable, Footer, Header, Input, Label, LoadingIndicator, Static
 
-from airdash.airflow import AirflowService, DagRunSummary, DagSummary, MarkSuccessResult, TriggerDagsResult
+from airdash.airflow import (
+    DEFAULT_RECENT_RUNS_LIMIT,
+    AirflowService,
+    DagRunSummary,
+    DagSummary,
+    MarkSuccessResult,
+    TriggerDagsResult,
+)
 from airdash.config import AirflowConfig, config_path, load_config, normalize_airflow_url, save_config
 
 
@@ -392,7 +399,7 @@ class Airdash(App[None]):
     def _load_dags(self) -> None:
         assert self._config is not None
         try:
-            rows = AirflowService(self._config).list_dags()
+            rows = AirflowService(self._config).list_dags(recent_runs_limit=DEFAULT_RECENT_RUNS_LIMIT)
         except Exception as exc:  # noqa: BLE001 - surface API/client errors in the TUI.
             self.call_from_thread(self._show_error, exc)
             return
@@ -412,7 +419,7 @@ class Airdash(App[None]):
         try:
             service = AirflowService(self._config)
             result = service.mark_latest_runs_success(dag_ids, limit=limit)
-            rows = service.list_dags()
+            rows = service.list_dags(recent_runs_limit=DEFAULT_RECENT_RUNS_LIMIT)
         except Exception as exc:  # noqa: BLE001 - surface API/client errors in the TUI.
             self.call_from_thread(self._show_error, exc)
             return
@@ -423,7 +430,7 @@ class Airdash(App[None]):
         try:
             service = AirflowService(self._config)
             result = service.trigger_dags(dag_ids)
-            rows = service.list_dags()
+            rows = service.list_dags(recent_runs_limit=DEFAULT_RECENT_RUNS_LIMIT)
         except Exception as exc:  # noqa: BLE001 - surface API/client errors in the TUI.
             self.call_from_thread(self._show_error, exc)
             return
@@ -570,7 +577,7 @@ class Airdash(App[None]):
         table.add_column("", key="selected", width=3)
         table.add_column("DAG", key="dag")
         table.add_column("Status", key="status")
-        table.add_column("Last 10", key="history")
+        table.add_column(f"Last {DEFAULT_RECENT_RUNS_LIMIT}", key="history")
         table.add_column("Paused", key="paused")
         table.add_column("Schedule", key="schedule")
         table.add_column("Last Run", key="last_run")
