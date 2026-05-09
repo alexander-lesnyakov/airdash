@@ -9,6 +9,13 @@ On first launch, the app asks for:
 
 It stores those values in the user config directory and opens directly to the DAG list on later runs.
 
+## Quick Launch
+
+```bash
+python -m pip install -e .
+airdash
+```
+
 ## Run
 
 ```bash
