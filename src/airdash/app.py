@@ -214,6 +214,8 @@ class Airdash(App[None]):
             return self._config is not None and self._has_widget("#main") and self._view == VIEW_RUNS
         if action in DAG_ACTIONS:
             return self._config is not None and self._has_widget("#main") and self._view == VIEW_DAGS
+        if action == "cancel_prompt":
+            return self._can_cancel()
         return True
 
     def action_refresh(self) -> None:
@@ -227,6 +229,7 @@ class Airdash(App[None]):
             return
         self.mount(self._setup_view(), before=self.query_one(Footer))
         self.query_one("#url", Input).focus()
+        self.refresh_bindings()
 
     def action_switch_view(self) -> None:
         if self._config is None or not self._has_widget("#main"):
@@ -262,6 +265,7 @@ class Airdash(App[None]):
         run_count = self.query_one("#run-count", Input)
         run_count.value = str(DEFAULT_MARK_SUCCESS_LIMIT)
         run_count.focus()
+        self.refresh_bindings()
 
     def action_trigger_selected_dags(self) -> None:
         if self._config is None or not self._has_widget("#main") or self._view != VIEW_DAGS:
@@ -288,6 +292,7 @@ class Airdash(App[None]):
             self._remove_if_mounted("#setup")
             self.mount(self._main_view(), before=self.query_one(Footer))
             self._focus_table()
+            self.refresh_bindings()
             self._start_load()
             return
 
@@ -298,6 +303,7 @@ class Airdash(App[None]):
         if not prompt.has_class("hidden"):
             prompt.add_class("hidden")
             self.query_one("#dags", DataTable).focus()
+            self.refresh_bindings()
 
     def action_filter_failed(self) -> None:
         self._set_run_filter("failed")
@@ -370,6 +376,7 @@ class Airdash(App[None]):
             return
 
         self.query_one("#bulk-prompt").add_class("hidden")
+        self.refresh_bindings()
         self.query_one("#loader").remove_class("hidden")
         self.query_one("#status", Static).update(
             f"Marking latest {limit} runs successful for {len(self._selected_dags)} DAGs..."
@@ -647,6 +654,15 @@ class Airdash(App[None]):
         except NoMatches:
             return False
         return True
+
+    def _can_cancel(self) -> bool:
+        if self._config is None:
+            return False
+        if self._has_widget("#setup") and not self._has_widget("#main"):
+            return True
+        if not self._has_widget("#main"):
+            return False
+        return not self.query_one("#bulk-prompt").has_class("hidden")
 
     def _remove_if_mounted(self, selector: str) -> None:
         try:
