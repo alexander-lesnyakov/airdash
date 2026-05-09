@@ -662,6 +662,8 @@ class Airdash(App[None]):
             return True
         if not self._has_widget("#main"):
             return False
+        if not self._has_widget("#bulk-prompt"):
+            return False
         return not self.query_one("#bulk-prompt").has_class("hidden")
 
     def _remove_if_mounted(self, selector: str) -> None:
